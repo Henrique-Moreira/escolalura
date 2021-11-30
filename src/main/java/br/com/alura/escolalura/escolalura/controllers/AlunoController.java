@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.util.List;
+
 @Controller
 public class AlunoController {
 
@@ -28,5 +30,12 @@ public class AlunoController {
         System.out.println(aluno);
         repository.salvar(aluno);
         return "redirect:/";
+    }
+
+    @GetMapping("/aluno/listar")
+    public String listar(Model model) {
+        List<Aluno> alunos = repository.obterTodosAlunos();
+        model.addAttribute("alunos", alunos);
+        return "aluno/listar";
     }
 }
