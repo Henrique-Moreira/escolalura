@@ -1,5 +1,6 @@
 package br.com.alura.escolalura.escolalura.models;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -54,6 +55,9 @@ public class Aluno {
         this.notas = notas;
     }
     public List<Habilidade> getHabilidades() {
+        if(habilidades == null) {
+            habilidades = new ArrayList<Habilidade>();
+        }
         return habilidades;
     }
     public void setHabilidades(List<Habilidade> habilidades) {
@@ -63,5 +67,14 @@ public class Aluno {
     public Aluno criarId() {
         setId(new ObjectId());
         return this;
+    }
+
+    public Aluno adicionar(Aluno aluno, Habilidade habilidade) {
+        List<Habilidade> habilidades = aluno.getHabilidades();
+
+        habilidades.add(habilidade);
+        aluno.setHabilidades(habilidades);
+
+        return aluno;
     }
 }
