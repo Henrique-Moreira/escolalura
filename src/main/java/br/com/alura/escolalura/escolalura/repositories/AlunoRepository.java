@@ -15,6 +15,8 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Repository;
 
+import javax.swing.text.Position;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -108,6 +110,21 @@ public class AlunoRepository {
         while (resultados.hasNext()) {
             alunos.add(resultados.next());
         }
+        return alunos;
+    }
+
+    public List<Aluno> pesquisaPorGeolocalizacao(Aluno aluno) {
+        criarConexao();
+        MongoCollection<Aluno> alunoCollection = this.bancoDeDados.getCollection("alunos", Aluno.class);
+        alunoCollection.createIndex(Indexes.geo2dsphere("contato"));
+
+        List<Double> coordinates = aluno.getContato().getCoordinates();
+        Point pontoReferencia = new Point(new Position(coordinates.get(0), coordinates.get(1)));
+
+        MongoCursor<Aluno> resultados = alunoCollection.find(Filters.nearSphere("contato", pontoReferencia, 2000.0, 0.0)).limit(2).skip(1).iterator();
+        List<Aluno> alunos = popularAlunos(resultados);
+
+        fecharConexao();
         return alunos;
     }
 }
