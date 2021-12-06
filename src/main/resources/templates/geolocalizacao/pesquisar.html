@@ -41,6 +41,11 @@
             </div>
         </div>
     </form>
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+        var alunos = [[${alunosProximos}]];
+        /*]]>*/
+        </script>
 
     <script
             src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAIPw0BOFbsavl2S0XJm366GqIL8WaL4xw&amp;callback=initMap"

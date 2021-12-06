@@ -1,13 +1,8 @@
 package br.com.alura.escolalura.escolalura.repositories;
 
-import br.com.alura.escolalura.escolalura.codecs.AlunoCodec;
-import br.com.alura.escolalura.escolalura.models.Aluno;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bson.Document;
 import org.bson.codecs.Codec;
 import org.bson.codecs.configuration.CodecRegistries;
@@ -15,10 +10,26 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Repository;
 
-import javax.swing.text.Position;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Indexes;
+import com.mongodb.client.model.geojson.Point;
+import com.mongodb.client.model.geojson.Position;
+
+import br.com.alura.escolalura.escolalura.codecs.AlunoCodec;
+import br.com.alura.escolalura.escolalura.models.Aluno;
+
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.mongodb.client.model.Filters.*;
+import static com.mongodb.client.model.Filters.nearSphere;
 
 @Repository
 public class AlunoRepository {
@@ -46,7 +57,7 @@ public class AlunoRepository {
         if(aluno.getId() ==  null) {
             alunos.insertOne(aluno);
         } else {
-            alunos.updateOne(Filters.eq("_id", aluno.getId()), new Document("$set", aluno));
+            alunos.updateOne(eq("_id", aluno.getId()), new Document("$set", aluno));
         }
 
         fecharConexao();
@@ -67,7 +78,7 @@ public class AlunoRepository {
     public Aluno obterAlunoPor(String id) {
         criarConexao();
         MongoCollection<Aluno> alunos = this.bancoDeDados.getCollection("alunos", Aluno.class);
-        Aluno aluno = alunos.find(Filters.eq("_id", new ObjectId(id))).first();
+        Aluno aluno = alunos.find(eq("_id", new ObjectId(id))).first();
 
         return aluno;
     }
@@ -75,7 +86,7 @@ public class AlunoRepository {
     public List<Aluno> pesquisarPor(String nome) {
         criarConexao();
         MongoCollection<Aluno> alunoCollection = this.bancoDeDados.getCollection("alunos", Aluno.class);
-        MongoCursor<Aluno> resultados = alunoCollection.find(Filters.eq("nome", nome), Aluno.class).iterator();
+        MongoCursor<Aluno> resultados = alunoCollection.find(eq("nome", nome), Aluno.class).iterator();
 
         List<Aluno> alunos = popularAlunos(resultados);
 
@@ -89,9 +100,9 @@ public class AlunoRepository {
 
         MongoCursor<Aluno> resultados = null;
         if(classificacao.equals("reprovados")) {
-            resultados = alunoCollection.find(Filters.lt("notas", nota)).iterator();
+            resultados = alunoCollection.find(lt("notas", nota)).iterator();
         } else if(classificacao.equals("aprovados")){
-            resultados = alunoCollection.find(Filters.gte("notas", nota)).iterator();
+            resultados = alunoCollection.find(gte("notas", nota)).iterator();
         }
 
         List<Aluno> alunos = popularAlunos(resultados);
@@ -113,7 +124,7 @@ public class AlunoRepository {
         return alunos;
     }
 
-    public List<Aluno> pesquisaPorGeolocalizacao(Aluno aluno) {
+    public List<Aluno> pesquisaPorGeolocalizao(Aluno aluno) {
         criarConexao();
         MongoCollection<Aluno> alunoCollection = this.bancoDeDados.getCollection("alunos", Aluno.class);
         alunoCollection.createIndex(Indexes.geo2dsphere("contato"));
@@ -121,7 +132,7 @@ public class AlunoRepository {
         List<Double> coordinates = aluno.getContato().getCoordinates();
         Point pontoReferencia = new Point(new Position(coordinates.get(0), coordinates.get(1)));
 
-        MongoCursor<Aluno> resultados = alunoCollection.find(Filters.nearSphere("contato", pontoReferencia, 2000.0, 0.0)).limit(2).skip(1).iterator();
+        MongoCursor<Aluno> resultados = alunoCollection.find(Filters.nearSphere("contato", pontoReferencia, 100000.0, 0.0)).limit(2).skip(1).iterator();
         List<Aluno> alunos = popularAlunos(resultados);
 
         fecharConexao();
